@@ -22,12 +22,19 @@ Loop {
 columns := input.Value
 positionIndex := 0
 
-MsgBox("Press F12 while target window is active to cycle through positions.  When you are done, press F11 to terminate script.")
+MsgBox("Press F12/F11 while target window is active to cycle through positions.  When you are done, press F10 to terminate script.")
 
-
-F12:: {
+cyclePositions(reverse := false) {
 	global positionIndex
-	positionIndex := Mod(positionIndex + 1, rows * columns)
+	if (reverse) {
+		positionIndex--
+		if (positionIndex < 0) {
+			positionIndex += rows * columns
+		}
+	} else {
+		positionIndex++
+	}
+	positionIndex := Mod(positionIndex, rows * columns)
 	
 	ActiveHwnd := WinExist("A")
 	WinGetPos(&X, &Y, &Width, &Height, "ahk_id " ActiveHwnd)
@@ -58,7 +65,11 @@ F12:: {
 	}
 }
 
-F11:: {
+
+F12:: cyclePositions()
+F11:: cyclePositions(reverse := true)
+
+F10:: {
 	MsgBox("Exiting...")
 	ExitApp()
 }
