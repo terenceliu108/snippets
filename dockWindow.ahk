@@ -1,6 +1,7 @@
 #SingleInstance force
 ;made to work with AutoHotkey v2 beta 11
 
+
 Loop {
 	input := InputBox("Enter number of rows", "Window Docker")
 	if (IsNumber(input.Value) and input.Value > 0 and input.Value == Floor(input.Value)) {
@@ -22,10 +23,12 @@ Loop {
 columns := input.Value
 positionIndex := 0
 
+
 MsgBox("Press F12/F11 while target window is active to cycle through positions.  When you are done, press F10 to terminate script.")
 
-cyclePositions(reverse := false) {
+cyclePositions(reverse := false, toNextOpen := false) {
 	global positionIndex
+	global lastWindowExe
 	if (reverse) {
 		positionIndex--
 		if (positionIndex < 0) {
@@ -36,6 +39,7 @@ cyclePositions(reverse := false) {
 	}
 	positionIndex := Mod(positionIndex, rows * columns)
 	
+	
 	ActiveHwnd := WinExist("A")
 	WinGetPos(&X, &Y, &Width, &Height, "ahk_id " ActiveHwnd)
 
@@ -43,17 +47,16 @@ cyclePositions(reverse := false) {
 		MonitorGetWorkArea A_Index, &WL, &WT, &WR, &WB
 		width := (WR - WL) / columns
 		height := (WB - WT) / rows
-		if (WL <= X and X <= WR and WT <= Y and Y <= WB){
+		if (WL-8 <= X and X <= WR-8 and WT <= Y and Y <= WB){
 			
 			j := 0
 			Loop(rows){
 				i := 0
 				Loop (columns) {
 					if (j * columns + i == positionIndex) {
-						
 						posX := i * width
 						posY := j * height
-						WinMove(posX + WL, posY + WT, width, height, "ahk_id " ActiveHwnd)
+						WinMove(posX + WL -8, posY + WT, width + 16, height + 8, "ahk_id " ActiveHwnd)
 						return
 					}
 					i++
@@ -63,13 +66,15 @@ cyclePositions(reverse := false) {
 		
 		}
 	}
+	
+	lastWindowExe := WinGetProcessPath("A")
 }
 
 
 F12:: cyclePositions()
 F11:: cyclePositions(reverse := true)
 
-F10:: {
+F9:: {
 	MsgBox("Exiting...")
 	ExitApp()
 }
