@@ -1,13 +1,23 @@
-static void printLeafNode(const string key, const json value, const vector<json>& path, void* param) { ImGui::Text("%s: %s", key.c_str(), value.dump().c_str()); } //prints leaves
+//print leaves
+static void printLeafNode(const string key, const json value, const vector<json>& path, void* param) { 
+	ImGui::Text("%s: %s", key.c_str(), value.dump().c_str()); 
+} 
 
-static void expandAllNodes(const string key, const json value, const vector<json>& path, void* param) { ImGui::SetNextItemOpen(true, ImGuiCond_Once); } //prints leaves
+//expand nodes
+static void expandAllNodes(const string key, const json value, const vector<json>& path, void* param) { 
+	ImGui::SetNextItemOpen(true, ImGuiCond_Once); 
+}
 
-static void jsonToTreeNodes(const json& obj, 
-							void(leafFunc)(const string key, const json value, const vector<json>& path, void* leafParam) = printLeafNode, //func to run on leaf nodes, defaults to the above
-							void* leafParam = NULL, //leaf node function's default param
-							void(nodeFunc)(const string key, const json value, const vector<json>& path, void* nodeParam) = expandAllNodes, //func to run on all nodes (array/object). default function sets next node to be expanded
-							void* nodeParam = NULL, //leaf node function's default param
-							bool subsequentRun = false) {		//don't pass this argument for first call
+//generate TreeNodes from nlohmann::json object
+//takes one function pointer and pointer to its parameters to run on each leaf
+//takes another function pointer and point ot its parameters to run on each node
+//default functions are given (see above)
+static void jsonToTreeNodes(	const json& obj, 
+				void(leafFunc)(const string key, const json value, const vector<json>& path, void* leafParam) = printLeafNode, //func to run on leaf nodes
+				void* leafParam = NULL, //leaf node function's default param
+				void(nodeFunc)(const string key, const json value, const vector<json>& path, void* nodeParam) = expandAllNodes, //func to run on all nodes t). 
+				void* nodeParam = NULL, //leaf node function's default param
+				bool subsequentRun = false) {		//don't pass this argument for first call
 	static std::vector<json> path;
 	static int sequenceNumber = 0;		//we need this to give keys with the same name a unique label
 	for (const auto& [key, value] : obj.items()) {
