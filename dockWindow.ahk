@@ -1,7 +1,6 @@
 #SingleInstance force
 ;made to work with AutoHotkey v2 beta 11
 
-
 Loop {
 	input := InputBox("Enter number of rows", "Window Docker")
 	if (IsNumber(input.Value) and input.Value > 0 and input.Value == Floor(input.Value)) {
@@ -22,8 +21,6 @@ Loop {
 }
 columns := input.Value
 positionIndex := 0
-
-
 MsgBox("Press F12/F11 while target window is active to cycle through positions.  When you are done, press F10 to terminate script.")
 
 cyclePositions(reverse := false, toNextOpen := false) {
@@ -39,7 +36,6 @@ cyclePositions(reverse := false, toNextOpen := false) {
 	}
 	positionIndex := Mod(positionIndex, rows * columns)
 	
-	
 	ActiveHwnd := WinExist("A")
 	WinGetPos(&X, &Y, &Width, &Height, "ahk_id " ActiveHwnd)
 
@@ -47,8 +43,7 @@ cyclePositions(reverse := false, toNextOpen := false) {
 		MonitorGetWorkArea A_Index, &WL, &WT, &WR, &WB
 		width := (WR - WL) / columns
 		height := (WB - WT) / rows
-		if (WL-8 <= X and X <= WR-8 and WT <= Y and Y <= WB){
-			
+		if (WL - 8 <= X and X <= WR + 8 and WT - 8 <= Y and Y <= WB + 8){		
 			j := 0
 			Loop(rows){
 				i := 0
@@ -63,17 +58,13 @@ cyclePositions(reverse := false, toNextOpen := false) {
 				}
 				j++
 			}
-		
 		}
 	}
-	
 	lastWindowExe := WinGetProcessPath("A")
 }
 
-
 F12:: cyclePositions()
 F11:: cyclePositions(reverse := true)
-
 F9:: {
 	MsgBox("Exiting...")
 	ExitApp()
