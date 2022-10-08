@@ -1,39 +1,96 @@
 #SingleInstance force
-;written for AutoHotkey v2 beta 11
-;_______________________________________________________________________________________________
-;	Alt  + Up/Down/Left/Right 		=> move window (SAME row/column wrap around)
-;	Ctrl + Up/Down/Left/Right 		=> move window (SAME row/column wrap around) 
-;	Ctrl + Alt + Up/Down/Left/Right	=> move window (wrap around to NEXT row/column)
-;	F12					=> Quit
-;
-;	To-Do: A proper GUI and optimizations
+;built for AutoHotkey v2 beta 11
+;________________________________________________________________________________________________
+;	Alt  + Up/Down/Left/Right 			=> move window (SAME row/column wrap around)
+;	Ctrl + Up/Down/Left/Right 			=> move window (SAME row/column wrap around) 
+;	Ctrl + Alt + Up/Down/Left/Right	=> move window (wrap around to NEXT row/column)  
+;	F12 to quit
+;	F11 to toggle Title Bar and Borders
 ;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 ;
 ;
 ;______________________
 ;===== User Input =====
 ;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-Loop {
-	input := InputBox("Enter number of rows", "Window Docker")
-	if (IsNumber(input.Value) and input.Value > 0 and input.Value == Floor(input.Value)) {
-		break
-	} else {
-		MsgBox("Input must be a positive integer!")
-	}
-}
-rows := input.Value
+MyGui := Gui()
+MyGui.Add("Text", "section", "Number of Rows:")  
+MyGui.Add("Text", "y+16", "Number of Columns:")
+MyGui.Add("Text", "y+16", "Apply Settings..............")
+MyGui.Add("Text", "y+16", "Arrow Key Move..........")
+MyGui.Add("Text", "y+16", "Stop Quick Mode........")
+RowsEdit := MyGui.Add("Edit", "Number ys w80", "2")  
+ColumnsEdit := MyGui.Add("Edit", "Number w80", "2")
+MyBtn1 := MyGui.Add("Button", "Default w80", "Apply")
+MyBtn1.OnEvent("Click", onButtonClick_Apply)  
+MyBtn2 := MyGui.Add("Button", "Default w80", "Quick Mode")
+MyBtn2.OnEvent("Click", onButtonClick_QuickMode) 
+MyBtn3 := MyGui.Add("Button", "Default w80", "Stop")
+MyBtn3.OnEvent("Click", onButtonClick_Stop) 
+MyGui.OnEvent("Close", MyGui_Close)
+MyGui.Show
 
-Loop {
-	input := InputBox("Enter number of columns", "Window Docker")
-	if (IsNumber(input.Value) and input.Value > 0 and input.Value == Floor(input.Value)) {
-		break
+MsgBox(	"Alt + Arrow Keys => move window (normal mode)`n" .
+		"Ctrl + Arrow Keys => move window (normal mode)`n" .
+		"Ctrl + Arrow Keys => move window (alternate mode)`n" .
+		"F11 to toggle Title Bar and Borders`n" .
+		"F12 to quit`n" 
+		"`n" . 
+		"Hint: Quick Mode allows the use of arrow keys without modifiers."
+		)
+
+positionIndex := 0
+rows := 0
+columns := 0
+
+MyGui_Close(*) {  
+    ExitApp()
+}
+
+onButtonClick_Apply(*) {
+	r := RowsEdit.Value
+	c := ColumnsEdit.Value
+	if (IsNumber(r) and r > 0 and r == Floor(r) and IsNumber(c) and c > 0 and c == Floor(c)) {
+		global rows := r
+		global columns := c
+		return
 	} else {
-		MsgBox("Input must be a positive integer!")
+		MsgBox("Inputs must be positive integers!")
 	}
 }
-columns := input.Value
-positionIndex := 0
-MsgBox("Press F12/F11 while target window is active to cycle through positions.  When you are done, press F10 to terminate script.")
+
+showToolTip() {
+	ToolTip("Click Stop or hit the Escape key to stop.", , , 1)
+	sleep 1000
+	ToolTip( , , , 1)
+	sleep 500
+}
+
+onButtonClick_QuickMode(*) {
+	onButtonClick_Apply()
+	Hotkey "up", (*)=> cyclePositions("Up")
+	Hotkey "down", (*)=> cyclePositions("Down")
+	Hotkey "left", (*)=> cyclePositions("Left")
+	Hotkey "right", (*)=> cyclePositions("Right")
+	Hotkey "escape", (*)=> onButtonClick_Stop()
+	Hotkey "up", "On"
+	Hotkey "down", "On"
+	Hotkey "left", "On"
+	Hotkey "right", "On"
+	Hotkey "escape", "On"
+
+	SetTimer showToolTip, 50
+}
+
+onButtonClick_Stop(*) {
+	Hotkey "up", "Off"
+	Hotkey "down", "Off"
+	Hotkey "left", "Off"
+	Hotkey "right", "Off"
+	Hotkey "escape", "off"
+	
+	SetTimer showToolTip, 0
+	ToolTip( , , , 1)
+}
 ;
 ;
 ;_____________________
@@ -43,7 +100,7 @@ positionOccupied(windowList, posX, posY, width_, height_, &occupyingHwnd := 0) {
 	occupyingHwnd := 0
 	for window in windowList {
 		WinGetPos(&X, &Y, &Width, &Height, "ahk_id " window)
-		if (posX == X  and posY == Y and Width == width_ and Height == height_) { ;as precaution we ignore windows with zero dimensions
+		if ((posX == X or posX == X + 8 or posX == X - 8)  and posY == Y and (Width == width_ or Width == width_ + 16 or Width == width_ - 16) and (Height == height_ or Height == height_ + 8 or Height == height_ - 8)) { ;as precaution we ignore windows with zero dimensions
 			if (WinExist("A") == window) { ;not optimal but this will prevent "moving" current window to another position if it's already sitting in a valid slot
 				return false	;returning false here essentially moves this window back to its current location instead of having it moved else where next iteration
 			}
@@ -68,7 +125,7 @@ getPositionIndexFromCoordinates(X, Y, Width, Height, rows, columns) {
 				Loop (columns) {
 					posX := i * width_
 					posY := j * height_
-					if (X == posX + WL - 8 and Y == posY + WT and width_ + 16 == Width and height_ + 8 == Height) {
+					if ((X == posX + WL - 8 or X == posX + WL) and Y == posY + WT and (width_ + 16 == Width or width_ == Width) and (height_ + 8 == Height or height_ == Height)) {
 						return j * columns + i
 					}
 					i++
@@ -84,8 +141,16 @@ getPositionIndexFromCoordinates(X, Y, Width, Height, rows, columns) {
 ;main function
 cyclePositions(mode) {
 	global positionIndex
+	global rows
+	global columns
+	if (rows == 0 or columns == 0) {
+		MsgBox("Positive integer inputs required!")
+		return
+	}
 	
 	ActiveHwnd := WinExist("A")
+	BorderAndTitleBar := (WinGetStyle("A") & 0xC40000) ? 1 : 0
+	
 	WinGetPos(&X, &Y, &Width, &Height, "ahk_id " ActiveHwnd)
 	
 	if (mode != "FirstOpenSlot") { ;infinite recursion is bad!
@@ -164,15 +229,24 @@ cyclePositions(mode) {
 					posX := i * width
 					posY := j * height
 					if (mode == "FirstOpenSlot") {
-						if (!positionOccupied(windowList, posX + WL - 8, posY + WT, width + 16, height + 8)) {
-							WinMove(posX + WL - 8, posY + WT, width + 16, height + 8, "ahk_id " ActiveHwnd)
+						if (!positionOccupied(windowList, posX + WL - 8*BorderAndTitleBar, posY + WT, width + 16*BorderAndTitleBar, height + 8*BorderAndTitleBar)) {
+							WinMove(posX + WL - 8*BorderAndTitleBar, posY + WT, width + 16*BorderAndTitleBar, height + 8*BorderAndTitleBar, "ahk_id " ActiveHwnd)
 							return
 						}
 					} else if (j * columns + i == positionIndex) {
-						if (positionOccupied(windowList, posX + WL - 8, posY + WT, width + 16, height + 8, &occupyingHwnd)) {
-							WinMove(X, Y, width + 16, height + 8, "ahk_id " occupyingHwnd)
+						if (positionOccupied(windowList, posX + WL - 8*BorderAndTitleBar, posY + WT, width + 16*BorderAndTitleBar, height + 8*BorderAndTitleBar, &occupyingHwnd)) {
+							occupyingHwndBandTStyle := (WinGetStyle("ahk_id " occupyingHwnd) & 0xC40000) ? 1 : 0
+							if (BorderAndTitleBar and !occupyingHwndBandTStyle) {
+								WinMove(X + 8, Y, width + 16*occupyingHwndBandTStyle, height + 8*occupyingHwndBandTStyle, "ahk_id " occupyingHwnd)
+							} else if (BorderAndTitleBar and occupyingHwndBandTStyle) {
+								WinMove(X, Y, width + 16*occupyingHwndBandTStyle, height + 8*occupyingHwndBandTStyle, "ahk_id " occupyingHwnd)
+							} else if (!BorderAndTitleBar and !occupyingHwndBandTStyle) {
+								WinMove(X, Y, width + 16*occupyingHwndBandTStyle, height + 8*occupyingHwndBandTStyle, "ahk_id " occupyingHwnd)
+							} else if (!BorderAndTitleBar and occupyingHwndBandTStyle) {
+								WinMove(X - 8, Y, width + 16*occupyingHwndBandTStyle, height + 8*occupyingHwndBandTStyle, "ahk_id " occupyingHwnd)
+							}
 						}
-						WinMove(posX + WL - 8, posY + WT, width + 16, height + 8, "ahk_id " ActiveHwnd)
+						WinMove(posX + WL - 8*BorderAndTitleBar, posY + WT, width + 16*BorderAndTitleBar, height + 8*BorderAndTitleBar, "ahk_id " ActiveHwnd)
 						return
 					}
 					i++
@@ -198,6 +272,9 @@ cyclePositions(mode) {
 ^!Right:: 	cyclePositions("SequentialRight")
 ^!Up:: 		cyclePositions("SequentialUp")
 ^!Down:: 	cyclePositions("SequentialDown")
+
+F11:: WinSetStyle("^0xC40000", "A") 
+
 F12:: {
 	MsgBox("Exiting...")
 	ExitApp()
