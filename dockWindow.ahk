@@ -29,13 +29,14 @@ MyBtn3.OnEvent("Click", onButtonClick_Stop)
 MyGui.OnEvent("Close", MyGui_Close)
 MyGui.Show
 
-MsgBox(	"Alt + Arrow Keys => move window (normal mode)`n" .
-		"Ctrl + Arrow Keys => move window (normal mode)`n" .
-		"Ctrl + Arrow Keys => move window (alternate mode)`n" .
+MsgBox(	"Alt/Ctrl + Arrow Keys => move window (normal mode)`n" .
+		"Alt + Ctrl + Arrow Keys => move window (alternate mode)`n" .
 		"F11 to toggle Title Bar and Borders`n" .
 		"F12 to quit`n" 
 		"`n" . 
-		"Hint: Quick Mode allows the use of arrow keys without modifiers."
+		"Hint: Quick Mode allows the use of arrow keys without modifiers.`n" .
+		"         Spacebar will toggle Title Bar and Borders.", 
+		"Helpful Hints", "T10"
 		)
 
 positionIndex := 0
@@ -60,9 +61,9 @@ onButtonClick_Apply(*) {
 
 showToolTip() {
 	ToolTip("Click Stop or hit the Escape key to stop.", , , 1)
-	sleep 1000
+	sleep 1200
 	ToolTip( , , , 1)
-	sleep 500
+	sleep 400
 }
 
 onButtonClick_QuickMode(*) {
@@ -71,11 +72,13 @@ onButtonClick_QuickMode(*) {
 	Hotkey "down", (*)=> cyclePositions("Down")
 	Hotkey "left", (*)=> cyclePositions("Left")
 	Hotkey "right", (*)=> cyclePositions("Right")
+	Hotkey "space", (*)=> toggleTitleBarBorders() 
 	Hotkey "escape", (*)=> onButtonClick_Stop()
 	Hotkey "up", "On"
 	Hotkey "down", "On"
 	Hotkey "left", "On"
 	Hotkey "right", "On"
+	Hotkey "space", "On"
 	Hotkey "escape", "On"
 
 	SetTimer showToolTip, 50
@@ -86,6 +89,7 @@ onButtonClick_Stop(*) {
 	Hotkey "down", "Off"
 	Hotkey "left", "Off"
 	Hotkey "right", "Off"
+	Hotkey "space", "Off"
 	Hotkey "escape", "off"
 	
 	SetTimer showToolTip, 0
@@ -135,6 +139,19 @@ getPositionIndexFromCoordinates(X, Y, Width, Height, rows, columns) {
 		}
 	}
 	return -1 ;failure
+}
+;
+;
+toggleTitleBarBorders() {
+	ActiveHwnd := WinExist("A")
+	titleBarBorders := (WinGetStyle("ahk_id " ActiveHwnd) & 0xC40000) ? 1 : 0
+	WinSetStyle("^0xC40000", "ahk_id " ActiveHwnd)
+	WinGetPos(&X, &Y, &width, &height, "ahk_id " ActiveHwnd)
+	if (titleBarBorders) {
+		WinMove(X + 8, Y, width - 16, height - 8, "ahk_id " ActiveHwnd)
+	} else {	
+		WinMove(X - 8, Y, width + 16, height + 8, "ahk_id " ActiveHwnd)
+	}
 }
 ;
 ;
@@ -256,7 +273,8 @@ cyclePositions(mode) {
 		}
 	}
 }
-
+;
+;
 ;___________________
 ;===== Hotkeys =====
 ;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -273,7 +291,7 @@ cyclePositions(mode) {
 ^!Up:: 		cyclePositions("SequentialUp")
 ^!Down:: 	cyclePositions("SequentialDown")
 
-F11:: WinSetStyle("^0xC40000", "A") 
+F11:: toggleTitleBarBorders()
 
 F12:: {
 	MsgBox("Exiting...")
