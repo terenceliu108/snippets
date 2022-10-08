@@ -1,10 +1,12 @@
 #SingleInstance force
-;built for AutoHotkey v2 beta 11
+;written for AutoHotkey v2 beta 11
 ;_______________________________________________________________________________________________
-;Alt  + Up/Down/Left/Right 			=> move window (SAME row/column wrap around)
-;Ctrl + Up/Down/Left/Right 			=> move window (SAME row/column wrap around) 
-;Ctrl + Alt + Up/Down/Left/Right	=> move window (wrap around to NEXT row/column)  
-;fun fact:  processes such as hh.exe and explorer.exe sit at (0,0)
+;	Alt  + Up/Down/Left/Right 		=> move window (SAME row/column wrap around)
+;	Ctrl + Up/Down/Left/Right 		=> move window (SAME row/column wrap around) 
+;	Ctrl + Alt + Up/Down/Left/Right	=> move window (wrap around to NEXT row/column)
+;	F12					=> Quit
+;
+;	To-Do: A proper GUI and optimizations
 ;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 ;
 ;
